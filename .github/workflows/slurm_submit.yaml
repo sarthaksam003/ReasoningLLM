@@ -21,20 +21,18 @@ jobs:
           LOGDIR="/home/sarthaks/InternWork/logs"
           SCRIPT="hello.py"
 
-          cat > job.sh << 'EOF'
-#!/bin/bash
-#SBATCH -N 1
-#SBATCH --ntasks-per-node=1
-#SBATCH --time=00:05:00
-#SBATCH --job-name=${JOBNAME}
-#SBATCH --output=${LOGDIR}/${JOBNAME}.out
-#SBATCH --error=${LOGDIR}/${JOBNAME}.err
-#SBATCH --partition=standard
+          echo "#!/bin/bash" > job.sh
+          echo "#SBATCH -N 1" >> job.sh
+          echo "#SBATCH --ntasks-per-node=1" >> job.sh
+          echo "#SBATCH --time=00:05:00" >> job.sh
+          echo "#SBATCH --job-name=${JOBNAME}" >> job.sh
+          echo "#SBATCH --output=${LOGDIR}/${JOBNAME}.out" >> job.sh
+          echo "#SBATCH --error=${LOGDIR}/${JOBNAME}.err" >> job.sh
+          echo "#SBATCH --partition=standard" >> job.sh
 
-cd /home/sarthaks/InternWork/intern_repos/
-source /home/sarthaks/miniconda3/bin/activate
-conda activate mor_env
-python ${SCRIPT}
-EOF
+          echo "cd /home/sarthaks/InternWork/intern_repos/" >> job.sh
+          echo "source /home/sarthaks/miniconda3/bin/activate" >> job.sh
+          echo "conda activate mor_env" >> job.sh
+          echo "python \${SCRIPT}" >> job.sh
 
           sbatch job.sh
