@@ -1,35 +1,36 @@
-name: Submit to PARAM
+name: Submit Slurm Job to PARAM
 
 on:
   push:
-    branches: [ main, test-hello ]  # or whatever intern uses
+    branches:
+      - main
 
 jobs:
   run-on-param:
     runs-on: self-hosted
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Submit Slurm Job
-      run: |
-        TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-        JOBNAME="gh_${TIMESTAMP}"
-        LOGDIR="/home/sarthaks/InternWork/logs"
-        SCRIPTPATH="hello.py"
+      - name: Submit to SLURM
+        run: |
+          TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+          JOBNAME="job_${TIMESTAMP}"
+          LOGDIR="/home/sarthaks/InternWork/logs"
+          SCRIPT="hello.py"
 
-        echo "#!/bin/bash
+          echo "#!/bin/bash
 #SBATCH -N 1
 #SBATCH --ntasks-per-node=1
 #SBATCH --time=00:05:00
 #SBATCH --job-name=${JOBNAME}
-#SBATCH --output=${LOGDIR}/job.${JOBNAME}.out
-#SBATCH --error=${LOGDIR}/job.${JOBNAME}.err
+#SBATCH --output=${LOGDIR}/${JOBNAME}.out
+#SBATCH --error=${LOGDIR}/${JOBNAME}.err
 #SBATCH --partition=standard
 
 cd /home/sarthaks/InternWork/intern_repos/
 source /home/sarthaks/miniconda3/bin/activate
 conda activate mor_env
-python ${SCRIPTPATH}" > job.sh
+python ${SCRIPT}" > job.sh
 
-        sbatch job.sh
+          sbatch job.sh
