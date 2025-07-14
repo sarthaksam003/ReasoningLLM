@@ -21,7 +21,8 @@ jobs:
           LOGDIR="/home/sarthaks/InternWork/logs"
           SCRIPT="hello.py"
 
-          echo "#!/bin/bash
+          cat <<EOF > job.sh
+#!/bin/bash
 #SBATCH -N 1
 #SBATCH --ntasks-per-node=1
 #SBATCH --time=00:05:00
@@ -33,6 +34,7 @@ jobs:
 cd /home/sarthaks/InternWork/intern_repos/
 source /home/sarthaks/miniconda3/bin/activate
 conda activate mor_env
-python ${SCRIPT}" > job.sh
+python ${SCRIPT}
+EOF
 
           sbatch job.sh
