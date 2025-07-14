@@ -21,7 +21,7 @@ jobs:
           LOGDIR="/home/sarthaks/InternWork/logs"
           SCRIPT="hello.py"
 
-          cat <<EOF > job.sh
+          cat > job.sh << 'EOF'
 #!/bin/bash
 #SBATCH -N 1
 #SBATCH --ntasks-per-node=1
