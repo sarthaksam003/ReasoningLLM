@@ -1,0 +1,35 @@
+name: Submit to PARAM
+
+on:
+  push:
+    branches: [ main, test-hello ]  # or whatever intern uses
+
+jobs:
+  run-on-param:
+    runs-on: self-hosted
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Submit Slurm Job
+      run: |
+        TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+        JOBNAME="gh_${TIMESTAMP}"
+        LOGDIR="/home/sarthaks/InternWork/logs"
+        SCRIPTPATH="hello.py"
+
+        echo "#!/bin/bash
+#SBATCH -N 1
+#SBATCH --ntasks-per-node=1
+#SBATCH --time=00:05:00
+#SBATCH --job-name=${JOBNAME}
+#SBATCH --output=${LOGDIR}/job.${JOBNAME}.out
+#SBATCH --error=${LOGDIR}/job.${JOBNAME}.err
+#SBATCH --partition=standard
+
+cd /home/sarthaks/InternWork/intern_repos/
+source /home/sarthaks/miniconda3/bin/activate
+conda activate mor_env
+python ${SCRIPTPATH}" > job.sh
+
+        sbatch job.sh
