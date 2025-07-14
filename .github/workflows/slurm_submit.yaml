@@ -4,10 +4,12 @@ on:
   push:
     branches:
       - main
+      - test-hello
 
 jobs:
   run-on-param:
     runs-on: self-hosted
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
