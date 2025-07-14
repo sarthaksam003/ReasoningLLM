@@ -19,7 +19,7 @@ jobs:
           TIMESTAMP=$(date +%Y%m%d_%H%M%S)
           JOBNAME="job_${TIMESTAMP}"
           LOGDIR="/home/sarthaks/InternWork/logs"
-          SCRIPT="/home/sarthaks/InternWork/intern_repos/hello.py"
+          SCRIPT="${GITHUB_WORKSPACE}/hello.py"
 
           echo "#!/bin/bash" > job.sh
           echo "#SBATCH -N 1" >> job.sh
