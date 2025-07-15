@@ -3,8 +3,9 @@ name: Submit Slurm Job to PARAM
 on:
   push:
     branches:
-      - main
       - test-hello
+    paths:
+      - '**.py'
 
 jobs:
   run-on-param:
@@ -36,3 +37,12 @@ jobs:
           echo "python ${SCRIPT}" >> job.sh
 
           sbatch job.sh
+          cd ${GITHUB_WORKSPACE}
+
+          git config user.name "PARAM Runner Bot"
+          git config user.email "runner@company.com"
+
+          git add helloTestOutput.txt
+          git commit -m "Add output file for intern"
+          git push origin HEAD
+
