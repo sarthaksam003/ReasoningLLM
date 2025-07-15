@@ -32,7 +32,9 @@ jobs:
           echo "#SBATCH --partition=standard" >> job.sh
 
           echo "cd ${GITHUB_WORKSPACE}" >> job.sh
+          echo "source /home/sarthaks/miniconda3/etc/profile.d/conda.sh" >> job.sh
           echo "conda activate mor_env" >> job.sh
+
           echo "python ${SCRIPT}" >> job.sh
 
           sbatch job.sh
