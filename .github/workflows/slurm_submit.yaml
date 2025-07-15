@@ -31,18 +31,24 @@ jobs:
           echo "#SBATCH --error=${LOGDIR}/${JOBNAME}.err" >> job.sh
           echo "#SBATCH --partition=standard" >> job.sh
 
-          echo "cd /home/sarthaks/InternWork/intern_repos/" >> job.sh
           echo "source /home/sarthaks/miniconda3/bin/activate" >> job.sh
           echo "conda activate mor_env" >> job.sh
           echo "python ${SCRIPT}" >> job.sh
 
           sbatch job.sh
+
+          # Wait for job to finish (optional - risky if queue is busy)
+          # sleep 10
+
           cd ${GITHUB_WORKSPACE}
 
           git config user.name "PARAM Runner Bot"
           git config user.email "runner@company.com"
 
-          git add helloTestOutput.txt
-          git commit -m "Add output file for intern"
-          git push origin HEAD
-
+          if [ -f "helloTestOutput.txt" ]; then
+            git add helloTestOutput.txt
+            git commit -m "Add output file for intern"
+            git push origin HEAD
+          else
+            echo "helloTestOutput.txt not found, skipping commit"
+          fi
