@@ -31,7 +31,7 @@ jobs:
           echo "#SBATCH --error=${LOGDIR}/${JOBNAME}.err" >> job.sh
           echo "#SBATCH --partition=standard" >> job.sh
 
-          echo "source /home/sarthaks/miniconda3/bin/activate" >> job.sh
+          echo "cd ${GITHUB_WORKSPACE}" >> job.sh
           echo "conda activate mor_env" >> job.sh
           echo "python ${SCRIPT}" >> job.sh
 
