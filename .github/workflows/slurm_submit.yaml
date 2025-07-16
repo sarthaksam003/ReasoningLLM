@@ -33,5 +33,5 @@
             git commit -m "Add output file for intern"
             git push origin HEAD:test-hello
           else
-            echo "helloTestOutput.txt not found, skipping commit"
+            echo "helloTestOutput.txt not found, skipping commit."
           fi
