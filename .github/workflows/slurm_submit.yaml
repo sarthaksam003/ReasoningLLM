@@ -36,30 +36,69 @@ jobs:
           echo "cd ${GITHUB_WORKSPACE}" >> job.sh
           echo "source /home/sarthaks/miniconda3/etc/profile.d/conda.sh" >> job.sh
           echo "conda activate mor_env" >> job.sh
+          echo "export OUTPUT_FILENAME=\"output_${TIMESTAMP}.txt\"" >> job.sh
           echo "python ${SCRIPT}" >> job.sh
 
           JOB_ID=$(sbatch --parsable job.sh)
+          
+          # Save these variables for the next step
+          echo "TIMESTAMP=${TIMESTAMP}" >> $GITHUB_ENV
+          echo "JOBNAME=${JOBNAME}" >> $GITHUB_ENV
+          echo "LOGDIR=${LOGDIR}" >> $GITHUB_ENV
 
           echo "Waiting for Slurm job ${JOB_ID} to finish..."
           while squeue -j "$JOB_ID" 2>/dev/null | grep -q "$JOB_ID"; do
             sleep 5
           done
           echo "Slurm job ${JOB_ID} completed."
+
       - name: Push Output File to GitHub
         env:
           TOKEN: ${{ secrets.GH_PAT }}
         run: |
           cd ${GITHUB_WORKSPACE}
+          
+          # Create outputs and logs directories if they don't exist
+          mkdir -p outputs
+          mkdir -p logs
+          
+          # Expected output filename with timestamp
+          OUTPUT_FILE="output_${TIMESTAMP}.txt"
+          
+          # Check if the timestamped output file exists and copy it
+          if [ -f "$OUTPUT_FILE" ]; then
+            cp "$OUTPUT_FILE" outputs/
+            echo "✅ Found and copied $OUTPUT_FILE to outputs/"
+          else
+            echo "⚠️  $OUTPUT_FILE not found in workspace"
+            echo "📁 Current workspace contents:"
+            ls -la
+          fi
+          
+          # Copy log files (.out and .err) to logs directory
+          if [ -f "${LOGDIR}/${JOBNAME}.out" ]; then
+            cp "${LOGDIR}/${JOBNAME}.out" logs/
+            echo "✅ Found and copied ${JOBNAME}.out to logs/"
+          else
+            echo "⚠️  ${LOGDIR}/${JOBNAME}.out not found"
+          fi
+          
+          if [ -f "${LOGDIR}/${JOBNAME}.err" ]; then
+            cp "${LOGDIR}/${JOBNAME}.err" logs/
+            echo "✅ Found and copied ${JOBNAME}.err to logs/"
+          else
+            echo "⚠️  ${LOGDIR}/${JOBNAME}.err not found"
+          fi
 
           git config user.name "PARAM Runner Bot"
           git config user.email "runner@company.com"
 
-          git add outputs/testHelloOutput.txt job.sh
+          git add outputs/ logs/ job.sh
 
           if git diff --cached --quiet; then
             echo "🟡 Nothing new to commit"
           else
-            git commit -m "Add pipeline output for intern"
+            git commit -m "Add pipeline output and logs for intern - $(date '+%Y-%m-%d %H:%M:%S')"
             git remote set-url origin "https://x-access-token:$TOKEN@github.com/sarthaksam003/ReasoningLLM.git"
             git push origin HEAD:test-hello
           fi
