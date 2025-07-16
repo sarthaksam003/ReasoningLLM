@@ -17,7 +17,7 @@ jobs:
         with:
           fetch-depth: 0
 
-            - name: Submit to SLURM
+      - name: Submit to SLURM
         run: |
           TIMESTAMP=$(date +%Y%m%d_%H%M%S)
           JOBNAME="job_${TIMESTAMP}"
