@@ -17,7 +17,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Submit to SLURM
+            - name: Submit to SLURM
         run: |
           TIMESTAMP=$(date +%Y%m%d_%H%M%S)
           JOBNAME="job_${TIMESTAMP}"
@@ -38,7 +38,14 @@ jobs:
           echo "conda activate mor_env" >> job.sh
           echo "python ${SCRIPT}" >> job.sh
 
-          sbatch job.sh
+          JOB_ID=$(sbatch --parsable job.sh)
+
+          echo "Waiting for Slurm job ${JOB_ID} to finish..."
+          while squeue -j "$JOB_ID" 2>/dev/null | grep -q "$JOB_ID"; do
+            sleep 5
+          done
+          echo "Slurm job ${JOB_ID} completed."
+
 
       - name: Push Output File to GitHub
         run: |
