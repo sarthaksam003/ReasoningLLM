@@ -46,8 +46,9 @@ jobs:
           done
           echo "Slurm job ${JOB_ID} completed."
 
-
       - name: Push Output File to GitHub
+        env:
+          TOKEN: ${{ secrets.GH_PAT }}
         run: |
           cd ${GITHUB_WORKSPACE}
 
@@ -62,6 +63,6 @@ jobs:
             echo "🟡 Nothing new to commit"
           else
             git commit -m "Add pipeline output for intern"
-            git remote set-url origin https://x-access-token:${{ secrets.GH_PAT }}@github.com/sarthaksam003/ReasoningLLM.git
+            git remote set-url origin https://x-access-token:${TOKEN}@github.com/sarthaksam003/ReasoningLLM.git
             git push origin HEAD:test-hello
           fi
