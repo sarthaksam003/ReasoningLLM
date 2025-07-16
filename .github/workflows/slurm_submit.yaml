@@ -45,7 +45,6 @@ jobs:
             sleep 5
           done
           echo "Slurm job ${JOB_ID} completed."
-
       - name: Push Output File to GitHub
         env:
           TOKEN: ${{ secrets.GH_PAT }}
