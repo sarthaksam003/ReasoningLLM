@@ -1,24 +1,4 @@
-name: Submit Slurm Job to PARAM
-
-on:
-  push:
-    branches:
-      - test-hello
-    paths:
-      - '**.py'
-
-jobs:
-  run-on-param:
-    runs-on: self-hosted
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          persist-credentials: true
-
-      - name: Submit to SLURM
+      - name: Submit to SLURM and Commit Output
         run: |
           TIMESTAMP=$(date +%Y%m%d_%H%M%S)
           JOBNAME="job_${TIMESTAMP}"
@@ -37,14 +17,12 @@ jobs:
           echo "cd ${GITHUB_WORKSPACE}" >> job.sh
           echo "source /home/sarthaks/miniconda3/etc/profile.d/conda.sh" >> job.sh
           echo "conda activate mor_env" >> job.sh
-
           echo "python ${SCRIPT}" >> job.sh
 
           sbatch job.sh
 
-          # Wait for job to finish (optional - risky if queue is busy)
-          # sleep 10
-
+      - name: Push Output File to GitHub
+        run: |
           cd ${GITHUB_WORKSPACE}
 
           git config user.name "PARAM Runner Bot"
@@ -53,7 +31,7 @@ jobs:
           if [ -f "helloTestOutput.txt" ]; then
             git add helloTestOutput.txt
             git commit -m "Add output file for intern"
-            git push origin HEAD
+            git push origin HEAD:test-hello
           else
             echo "helloTestOutput.txt not found, skipping commit"
           fi
