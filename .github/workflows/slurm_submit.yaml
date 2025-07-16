@@ -1,4 +1,23 @@
-      - name: Submit to SLURM and Commit Output
+name: Submit Slurm Job to PARAM
+
+on:
+  push:
+    branches:
+      - test-hello
+    paths:
+      - '**.py'
+
+jobs:
+  run-on-param:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Submit to SLURM
         run: |
           TIMESTAMP=$(date +%Y%m%d_%H%M%S)
           JOBNAME="job_${TIMESTAMP}"
@@ -33,5 +52,5 @@
             git commit -m "Add output file for intern"
             git push origin HEAD:test-hello
           else
-            echo "helloTestOutput.txt not found, skipping commit"
+            echo "❌ helloTestOutput.txt not found, skipping commit"
           fi
