@@ -1,4 +1,6 @@
 from datetime import datetime
+import os
+output_path = os.path.join("outputs", "testHelloOutput.txt")
 
-with open("helloTestOutput.txt", "a") as f:
+with open(output_path, "a") as f:
     f.write(f"Pipeline test done at {datetime.now()}\n")

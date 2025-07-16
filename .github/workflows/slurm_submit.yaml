@@ -47,10 +47,10 @@ jobs:
           git config user.name "PARAM Runner Bot"
           git config user.email "runner@company.com"
 
-          if [ -f "helloTestOutput.txt" ]; then
-            git add helloTestOutput.txt
-            git commit -m "Add output file for intern"
+          if [ -f "outputs/testHelloOutput.txt" ]; then
+            git add outputs/testHelloOutput.txt
+            git commit -m "Add pipeline output for intern"
             git push origin HEAD:test-hello
           else
-            echo "❌ helloTestOutput.txt not found, skipping commit"
+            echo "outputs/testHelloOutput.txt not found, skipping commit"
           fi
