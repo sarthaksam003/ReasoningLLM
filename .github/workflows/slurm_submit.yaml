@@ -62,5 +62,6 @@ jobs:
             echo "🟡 Nothing new to commit"
           else
             git commit -m "Add pipeline output for intern"
+            git remote set-url origin https://x-access-token:${{ secrets.GH_PAT }}@github.com/sarthaksam003/ReasoningLLM.git
             git push origin HEAD:test-hello
           fi
