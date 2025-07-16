@@ -45,7 +45,7 @@ jobs:
             sleep 5
           done
           echo "Slurm job ${JOB_ID} completed."
-
+          
       - name: Push Output File to GitHub
         env:
           TOKEN: ${{ secrets.GH_PAT }}
@@ -55,10 +55,8 @@ jobs:
           git config user.name "PARAM Runner Bot"
           git config user.email "runner@company.com"
 
-          # Explicitly add the output file and job script (if needed)
           git add outputs/testHelloOutput.txt job.sh
 
-          # Only commit if something changed
           if git diff --cached --quiet; then
             echo "🟡 Nothing new to commit"
           else
