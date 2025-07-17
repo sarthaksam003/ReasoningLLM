@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - test-hello
+      - intern-*  # This will match intern-john, intern-jane, etc.
     paths:
       - '**.py'
 
@@ -22,7 +23,6 @@ jobs:
           TIMESTAMP=$(date +%Y%m%d_%H%M%S)
           JOBNAME="job_${TIMESTAMP}"
           LOGDIR="/home/sarthaks/InternWork/logs"
-          SCRIPT="${GITHUB_WORKSPACE}/hello.py"
 
           echo "#!/bin/bash" > job.sh
           echo "#SBATCH -N 1" >> job.sh
@@ -36,8 +36,23 @@ jobs:
           echo "cd ${GITHUB_WORKSPACE}" >> job.sh
           echo "source /home/sarthaks/miniconda3/etc/profile.d/conda.sh" >> job.sh
           echo "conda activate mor_env" >> job.sh
+          
+          # Set output filename for the main script
           echo "export OUTPUT_FILENAME=\"output_${TIMESTAMP}.txt\"" >> job.sh
-          echo "python ${SCRIPT}" >> job.sh
+          
+          # Run the main Python file (prioritize main.py, fallback to hello.py)
+          echo "echo \"=== Starting Python execution ===\"" >> job.sh
+          echo "if [ -f \"main.py\" ]; then" >> job.sh
+          echo "  echo \"Running main.py -> \$OUTPUT_FILENAME\"" >> job.sh
+          echo "  python main.py" >> job.sh
+          echo "elif [ -f \"hello.py\" ]; then" >> job.sh
+          echo "  echo \"Running hello.py -> \$OUTPUT_FILENAME\"" >> job.sh
+          echo "  python hello.py" >> job.sh
+          echo "else" >> job.sh
+          echo "  echo \"Error: No main.py or hello.py found!\"" >> job.sh
+          echo "  exit 1" >> job.sh
+          echo "fi" >> job.sh
+          echo "echo \"=== Python execution completed ===\"" >> job.sh
 
           JOB_ID=$(sbatch --parsable job.sh)
           
@@ -62,33 +77,39 @@ jobs:
           mkdir -p outputs
           mkdir -p logs
           
-          # Expected output filename with timestamp
+          # Find and copy the output file
           OUTPUT_FILE="output_${TIMESTAMP}.txt"
+          echo "Looking for output file: ${OUTPUT_FILE}..."
           
-          # Check if the timestamped output file exists and copy it
           if [ -f "$OUTPUT_FILE" ]; then
             cp "$OUTPUT_FILE" outputs/
-            echo "✅ Found and copied $OUTPUT_FILE to outputs/"
+            echo "Found and copied $OUTPUT_FILE to outputs/"
           else
-            echo "⚠️  $OUTPUT_FILE not found in workspace"
-            echo "📁 Current workspace contents:"
+            echo "$OUTPUT_FILE not found in workspace"
+            echo "Current workspace contents:"
             ls -la
           fi
           
           # Copy log files (.out and .err) to logs directory
           if [ -f "${LOGDIR}/${JOBNAME}.out" ]; then
             cp "${LOGDIR}/${JOBNAME}.out" logs/
-            echo "✅ Found and copied ${JOBNAME}.out to logs/"
+            echo "Found and copied ${JOBNAME}.out to logs/"
           else
-            echo "⚠️  ${LOGDIR}/${JOBNAME}.out not found"
+            echo "${LOGDIR}/${JOBNAME}.out not found"
           fi
           
           if [ -f "${LOGDIR}/${JOBNAME}.err" ]; then
             cp "${LOGDIR}/${JOBNAME}.err" logs/
-            echo "✅ Found and copied ${JOBNAME}.err to logs/"
+            echo "Found and copied ${JOBNAME}.err to logs/"
           else
-            echo "⚠️  ${LOGDIR}/${JOBNAME}.err not found"
+            echo "${LOGDIR}/${JOBNAME}.err not found"
           fi
+          
+          # Show what we found
+          echo "Files in outputs directory:"
+          ls -la outputs/ || echo "No outputs directory"
+          echo "Files in logs directory:"
+          ls -la logs/ || echo "No logs directory"
 
           git config user.name "PARAM Runner Bot"
           git config user.email "runner@company.com"
@@ -96,9 +117,9 @@ jobs:
           git add outputs/ logs/ job.sh
 
           if git diff --cached --quiet; then
-            echo "🟡 Nothing new to commit"
+            echo "Nothing new to commit"
           else
-            git commit -m "Add pipeline output and logs for intern - $(date '+%Y-%m-%d %H:%M:%S')"
+            git commit -m "Add pipeline outputs and logs for intern - $(date '+%Y-%m-%d %H:%M:%S')"
             git remote set-url origin "https://x-access-token:$TOKEN@github.com/sarthaksam003/ReasoningLLM.git"
             git push origin HEAD:test-hello
           fi
