@@ -17,6 +17,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+          token: ${{ secrets.GH_PAT }}  # Use PAT for checkout
 
       - name: Submit to SLURM
         run: |
@@ -73,6 +74,12 @@ jobs:
         run: |
           cd ${GITHUB_WORKSPACE}
           
+          # Ensure we're in a git repository
+          if [ ! -d ".git" ]; then
+            echo "Error: Not in a git repository!"
+            exit 1
+          fi
+          
           # Create outputs and logs directories if they don't exist
           mkdir -p outputs
           mkdir -p logs
@@ -111,15 +118,23 @@ jobs:
           echo "Files in logs directory:"
           ls -la logs/ || echo "No logs directory"
 
+          # Configure git with proper error handling
+          git config --global --add safe.directory ${GITHUB_WORKSPACE}
           git config user.name "PARAM Runner Bot"
           git config user.email "runner@company.com"
 
+          # Add files
           git add outputs/ logs/ job.sh
 
           if git diff --cached --quiet; then
             echo "Nothing new to commit"
           else
             git commit -m "Add pipeline outputs and logs for intern - $(date '+%Y-%m-%d %H:%M:%S')"
+            
+            # Use the current branch name dynamically
+            CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+            echo "Pushing to branch: $CURRENT_BRANCH"
+            
             git remote set-url origin "https://x-access-token:$TOKEN@github.com/sarthaksam003/ReasoningLLM.git"
-            git push origin HEAD:test-hello
+            git push origin HEAD:$CURRENT_BRANCH
           fi
