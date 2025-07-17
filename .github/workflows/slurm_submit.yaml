@@ -19,6 +19,32 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GH_PAT }}
 
+      - name: Debug workspace
+        run: |
+          echo "=== DEBUG INFO ==="
+          echo "PWD: $(pwd)"
+          echo "GITHUB_WORKSPACE: ${GITHUB_WORKSPACE}"
+          echo "HOME: ${HOME}"
+          echo "USER: $(whoami)"
+          
+          echo "=== DIRECTORY CONTENTS ==="
+          ls -la
+          
+          echo "=== GIT STATUS ==="
+          git status || echo "Git command failed"
+          
+          echo "=== GIT CONFIG ==="
+          git config --list || echo "Git config failed"
+          
+          echo "=== CHECKING .git directory ==="
+          if [ -d ".git" ]; then
+            echo "✓ .git directory exists"
+            ls -la .git/
+          else
+            echo "✗ .git directory NOT found"
+            find . -name ".git" -type d 2>/dev/null || echo "No .git found anywhere"
+          fi
+
       - name: Sync files to intern workspace
         run: |
           INTERN_REPO_PATH="/home/sarthaks/InternWork/intern_repos"
@@ -84,17 +110,37 @@ jobs:
         env:
           TOKEN: ${{ secrets.GH_PAT }}
         run: |
-          cd ${GITHUB_WORKSPACE}
+          echo "=== STARTING PUSH PROCESS ==="
+          echo "Current directory: $(pwd)"
+          echo "GITHUB_WORKSPACE: ${GITHUB_WORKSPACE}"
           
+          # Ensure we're in the right directory
+          cd ${GITHUB_WORKSPACE}
+          echo "Changed to: $(pwd)"
+          
+          # Check git status again
+          echo "=== GIT STATUS CHECK ==="
+          if [ -d ".git" ]; then
+            echo "✓ .git directory found"
+            git status
+          else
+            echo "✗ .git directory still not found"
+            echo "Directory contents:"
+            ls -la
+            echo "This suggests the checkout didn't work properly"
+            exit 1
+          fi
+          
+          # Create directories
           mkdir -p outputs logs
           
           # Copy output from intern_repos to GitHub workspace
           OUTPUT_FILE="output_${TIMESTAMP}.txt"
           if [ -f "${INTERN_REPO_PATH}/${OUTPUT_FILE}" ]; then
             cp "${INTERN_REPO_PATH}/${OUTPUT_FILE}" outputs/
-            echo "Found and copied ${OUTPUT_FILE} to outputs/"
+            echo "✓ Copied ${OUTPUT_FILE} to outputs/"
           else
-            echo "${OUTPUT_FILE} not found in ${INTERN_REPO_PATH}"
+            echo "✗ ${OUTPUT_FILE} not found in ${INTERN_REPO_PATH}"
             echo "Files in intern_repos:"
             ls -la ${INTERN_REPO_PATH}/
           fi
@@ -102,30 +148,48 @@ jobs:
           # Copy log files
           if [ -f "${LOGDIR}/${JOBNAME}.out" ]; then
             cp "${LOGDIR}/${JOBNAME}.out" logs/
-            echo "Found and copied ${JOBNAME}.out to logs/"
+            echo "✓ Copied ${JOBNAME}.out to logs/"
           fi
           
           if [ -f "${LOGDIR}/${JOBNAME}.err" ]; then
             cp "${LOGDIR}/${JOBNAME}.err" logs/
-            echo "Found and copied ${JOBNAME}.err to logs/"
+            echo "✓ Copied ${JOBNAME}.err to logs/"
           fi
           
-          echo "Files in outputs:"
+          echo "=== FILES COLLECTED ==="
+          echo "Outputs:"
           ls -la outputs/ || echo "No outputs directory"
-          echo "Files in logs:"
+          echo "Logs:"
           ls -la logs/ || echo "No logs directory"
 
-          git config user.name "PARAM Runner Bot"
-          git config user.email "runner@company.com"
-
+          # Git operations with better error handling
+          echo "=== GIT OPERATIONS ==="
+          
+          # Configure git
+          git config --global user.name "PARAM Runner Bot"
+          git config --global user.email "runner@company.com"
+          
+          # Add safe directory
+          git config --global --add safe.directory ${GITHUB_WORKSPACE}
+          
+          # Add files
           git add outputs/ logs/ job.sh
-
+          
           if git diff --cached --quiet; then
             echo "Nothing new to commit"
           else
+            echo "Committing changes..."
             git commit -m "Add pipeline outputs and logs - $(date '+%Y-%m-%d %H:%M:%S')"
             
+            echo "Getting current branch..."
             CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+            echo "Current branch: $CURRENT_BRANCH"
+            
+            echo "Setting remote URL..."
             git remote set-url origin "https://x-access-token:$TOKEN@github.com/sarthaksam003/ReasoningLLM.git"
+            
+            echo "Pushing to GitHub..."
             git push origin HEAD:$CURRENT_BRANCH
+            
+            echo "✓ Successfully pushed to GitHub"
           fi
