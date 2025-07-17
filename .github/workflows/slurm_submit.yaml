@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - test-hello
-      - intern-*  # This will match intern-john, intern-jane, etc.
+      - intern-*
     paths:
       - '**.py'
 
@@ -14,16 +14,30 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.GH_PAT }}  # Use PAT for checkout
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Sync files to intern workspace
+        run: |
+          INTERN_REPO_PATH="/home/sarthaks/InternWork/intern_repos"
+          
+          echo "Syncing Python files to intern workspace..."
+          mkdir -p ${INTERN_REPO_PATH}
+          
+          # Copy Python files from GitHub workspace to intern_repos
+          cp ${GITHUB_WORKSPACE}/*.py ${INTERN_REPO_PATH}/ 2>/dev/null || echo "No Python files to copy"
+          
+          echo "Files in intern workspace:"
+          ls -la ${INTERN_REPO_PATH}/
 
       - name: Submit to SLURM
         run: |
           TIMESTAMP=$(date +%Y%m%d_%H%M%S)
           JOBNAME="job_${TIMESTAMP}"
           LOGDIR="/home/sarthaks/InternWork/logs"
+          INTERN_REPO_PATH="/home/sarthaks/InternWork/intern_repos"
 
           echo "#!/bin/bash" > job.sh
           echo "#SBATCH -N 1" >> job.sh
@@ -34,14 +48,12 @@ jobs:
           echo "#SBATCH --error=${LOGDIR}/${JOBNAME}.err" >> job.sh
           echo "#SBATCH --partition=standard" >> job.sh
 
-          echo "cd ${GITHUB_WORKSPACE}" >> job.sh
+          echo "cd ${INTERN_REPO_PATH}" >> job.sh
           echo "source /home/sarthaks/miniconda3/etc/profile.d/conda.sh" >> job.sh
           echo "conda activate mor_env" >> job.sh
           
-          # Set output filename for the main script
           echo "export OUTPUT_FILENAME=\"output_${TIMESTAMP}.txt\"" >> job.sh
           
-          # Run the main Python file (prioritize main.py, fallback to hello.py)
           echo "echo \"=== Starting Python execution ===\"" >> job.sh
           echo "if [ -f \"main.py\" ]; then" >> job.sh
           echo "  echo \"Running main.py -> \$OUTPUT_FILENAME\"" >> job.sh
@@ -57,10 +69,10 @@ jobs:
 
           JOB_ID=$(sbatch --parsable job.sh)
           
-          # Save these variables for the next step
           echo "TIMESTAMP=${TIMESTAMP}" >> $GITHUB_ENV
           echo "JOBNAME=${JOBNAME}" >> $GITHUB_ENV
           echo "LOGDIR=${LOGDIR}" >> $GITHUB_ENV
+          echo "INTERN_REPO_PATH=${INTERN_REPO_PATH}" >> $GITHUB_ENV
 
           echo "Waiting for Slurm job ${JOB_ID} to finish..."
           while squeue -j "$JOB_ID" 2>/dev/null | grep -q "$JOB_ID"; do
@@ -74,67 +86,46 @@ jobs:
         run: |
           cd ${GITHUB_WORKSPACE}
           
-          # Ensure we're in a git repository
-          if [ ! -d ".git" ]; then
-            echo "Error: Not in a git repository!"
-            exit 1
-          fi
+          mkdir -p outputs logs
           
-          # Create outputs and logs directories if they don't exist
-          mkdir -p outputs
-          mkdir -p logs
-          
-          # Find and copy the output file
+          # Copy output from intern_repos to GitHub workspace
           OUTPUT_FILE="output_${TIMESTAMP}.txt"
-          echo "Looking for output file: ${OUTPUT_FILE}..."
-          
-          if [ -f "$OUTPUT_FILE" ]; then
-            cp "$OUTPUT_FILE" outputs/
-            echo "Found and copied $OUTPUT_FILE to outputs/"
+          if [ -f "${INTERN_REPO_PATH}/${OUTPUT_FILE}" ]; then
+            cp "${INTERN_REPO_PATH}/${OUTPUT_FILE}" outputs/
+            echo "Found and copied ${OUTPUT_FILE} to outputs/"
           else
-            echo "$OUTPUT_FILE not found in workspace"
-            echo "Current workspace contents:"
-            ls -la
+            echo "${OUTPUT_FILE} not found in ${INTERN_REPO_PATH}"
+            echo "Files in intern_repos:"
+            ls -la ${INTERN_REPO_PATH}/
           fi
           
-          # Copy log files (.out and .err) to logs directory
+          # Copy log files
           if [ -f "${LOGDIR}/${JOBNAME}.out" ]; then
             cp "${LOGDIR}/${JOBNAME}.out" logs/
             echo "Found and copied ${JOBNAME}.out to logs/"
-          else
-            echo "${LOGDIR}/${JOBNAME}.out not found"
           fi
           
           if [ -f "${LOGDIR}/${JOBNAME}.err" ]; then
             cp "${LOGDIR}/${JOBNAME}.err" logs/
             echo "Found and copied ${JOBNAME}.err to logs/"
-          else
-            echo "${LOGDIR}/${JOBNAME}.err not found"
           fi
           
-          # Show what we found
-          echo "Files in outputs directory:"
+          echo "Files in outputs:"
           ls -la outputs/ || echo "No outputs directory"
-          echo "Files in logs directory:"
+          echo "Files in logs:"
           ls -la logs/ || echo "No logs directory"
 
-          # Configure git with proper error handling
-          git config --global --add safe.directory ${GITHUB_WORKSPACE}
           git config user.name "PARAM Runner Bot"
           git config user.email "runner@company.com"
 
-          # Add files
           git add outputs/ logs/ job.sh
 
           if git diff --cached --quiet; then
             echo "Nothing new to commit"
           else
-            git commit -m "Add pipeline outputs and logs for intern - $(date '+%Y-%m-%d %H:%M:%S')"
+            git commit -m "Add pipeline outputs and logs - $(date '+%Y-%m-%d %H:%M:%S')"
             
-            # Use the current branch name dynamically
             CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-            echo "Pushing to branch: $CURRENT_BRANCH"
-            
             git remote set-url origin "https://x-access-token:$TOKEN@github.com/sarthaksam003/ReasoningLLM.git"
             git push origin HEAD:$CURRENT_BRANCH
           fi
