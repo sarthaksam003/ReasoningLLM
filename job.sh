@@ -2,14 +2,14 @@
 #SBATCH -N 1
 #SBATCH --ntasks-per-node=1
 #SBATCH --time=00:05:00
-#SBATCH --job-name=job_20250718_093725
-#SBATCH --output=/home/sarthaks/InternWork/logs/job_20250718_093725.out
-#SBATCH --error=/home/sarthaks/InternWork/logs/job_20250718_093725.err
+#SBATCH --job-name=job_20250718_164603
+#SBATCH --output=/home/sarthaks/InternWork/logs/job_20250718_164603.out
+#SBATCH --error=/home/sarthaks/InternWork/logs/job_20250718_164603.err
 #SBATCH --partition=standard
 cd /home/sarthaks/InternWork/intern_repos
 source /home/sarthaks/miniconda3/etc/profile.d/conda.sh
 conda activate mor_env
-export OUTPUT_FILENAME="output_20250718_093725.txt"
+export OUTPUT_FILENAME="output_20250718_164603.txt"
 echo "=== Starting Python execution ==="
 if [ -f "main.py" ]; then
   echo "Running main.py -> $OUTPUT_FILENAME"
