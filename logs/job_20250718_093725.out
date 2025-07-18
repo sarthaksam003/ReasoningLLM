@@ -1,0 +1,23 @@
+==========================================
+SLURM_CLUSTER_NAME = paramutkarsh
+SLURM_ARRAY_JOB_ID = 
+SLURM_ARRAY_TASK_ID = 
+SLURM_ARRAY_TASK_COUNT = 
+SLURM_ARRAY_TASK_MAX = 
+SLURM_ARRAY_TASK_MIN = 
+SLURM_JOB_ACCOUNT = cdac
+SLURM_JOB_ID = 321247
+SLURM_JOB_NAME = job_20250718_093725
+SLURM_JOB_NODELIST = cn011
+SLURM_JOB_USER = sarthaks
+SLURM_JOB_UID = 22301
+SLURM_JOB_PARTITION = standard
+SLURM_TASK_PID = 26716
+SLURM_SUBMIT_DIR = /home/sarthaks/InternWork/github-runner/_work/ReasoningLLM/ReasoningLLM
+SLURM_CPUS_ON_NODE = 1
+SLURM_NTASKS = 1
+SLURM_TASK_PID = 26716
+==========================================
+=== Starting Python execution ===
+Running main.py -> output_20250718_093725.txt
+=== Python execution completed ===
