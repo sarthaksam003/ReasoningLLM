@@ -29,7 +29,7 @@ jobs:
           if [ ! -d ".git" ]; then
             echo "Initializing git repository..."
             git init
-            git remote add origin "https://x-access-token:$TOKEN@github.com/sarthaks/ReasoningLLM.git"
+            git remote add origin "https://x-access-token:$TOKEN@github.com/sarthaksam003/ReasoningLLM.git"
             git config user.name "PARAM Runner Bot"
             git config user.email "runner@company.com"
             
